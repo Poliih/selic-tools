@@ -12,13 +12,13 @@ class SelicController extends Controller
     public function historico(Request $request, SelicService $selic)
     {
         return response()->json(
-            $selic->getSelicData($request->startDate, $request->end)
+            $selic->getSelicData($request->startDate, $request->endDate)
         );
     }
 
     public function simular(Request $request, SelicService $selic)
     {
-        $dados = $selic->getSelicData($request->inicio, $request->endDate);
+        $dados = $selic->getSelicData($request->startDate, $request->endDate);
         $total = $request->valor;
 
         foreach ($dados as $dia) {

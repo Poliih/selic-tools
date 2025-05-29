@@ -10,3 +10,4 @@ Route::get('/user', function (Request $request) {
 
 Route::get('/selic', [SelicController::class, 'historico']);
 Route::get('/simulacao', [SelicController::class, 'simular']);
+Route::get('/exportar', [SelicController::class, 'exportar']);

@@ -1,139 +1,92 @@
 <template>
-  <div class="max-w-4xl mx-auto p-6">
-    <h1 class="text-3xl font-bold mb-6">Histórico da Taxa Selic</h1>
+  <div class="p-6 max-w-5xl mx-auto">
+    <h1 class="text-3xl font-bold mb-6">Dashboard SELIC</h1>
 
-    <form @submit.prevent="buscarSelic" class="flex flex-wrap gap-4 mb-6 items-end">
-      <div class="flex flex-col">
-        <label for="startDate" class="font-semibold mb-1">Data Inicial</label>
-        <input
-          id="startDate"
-          v-model="startDate"
-          type="date"
-          class="border rounded px-3 py-2"
-          required
-        />
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Data Início</label>
+        <input type="date" v-model="startDate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
       </div>
-
-      <div class="flex flex-col">
-        <label for="endDate" class="font-semibold mb-1">Data Final</label>
-        <input
-          id="endDate"
-          v-model="endDate"
-          type="date"
-          class="border rounded px-3 py-2"
-          required
-        />
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Data Final</label>
+        <input type="date" v-model="endDate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
       </div>
+      <div class="flex items-end">
+        <button
+          @click="buscarSelic"
+          class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md shadow"
+        >
+          Buscar
+        </button>
+      </div>
+    </div>
 
-      <button
-        type="submit"
-        class="bg-blue-600 text-white rounded px-6 py-2 hover:bg-blue-700 transition disabled:opacity-50"
-        :disabled="loading"
-      >
-        {{ loading ? 'Buscando...' : 'Buscar Histórico' }}
-      </button>
+    <div v-if="dados.length" class="overflow-x-auto mt-4 border rounded-md shadow-sm">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Valor (%)</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr v-for="(item, index) in dados" :key="index">
+            <td class="px-6 py-4 text-sm text-gray-700">{{ item.data }}</td>
+            <td class="px-6 py-4 text-sm text-gray-700">{{ Number(item.valor).toFixed(5) }}%</td>
 
-      <button
-        type="button"
-        class="bg-green-600 text-white rounded px-6 py-2 hover:bg-green-700 transition disabled:opacity-50"
-        @click="exportarCSV"
-        :disabled="!dados.length"
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mt-6" v-if="dados.length">
+      <a
+        :href="`/api/exportar?startDate=${startDate}&endDate=${endDate}`"
+        class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md shadow"
       >
         Exportar CSV
-      </button>
-    </form>
-
-    <ul class="divide-y divide-gray-200 border rounded max-h-96 overflow-auto">
-      <li
-        v-for="item in dados"
-        :key="item.data"
-        class="flex justify-between px-4 py-2"
-      >
-        <span>{{ formatarData(item.data) }}</span>
-        <span class="font-semibold text-gray-800">{{ formatarValor(item.valor) }}</span>
-      </li>
-      <li v-if="!dados.length && !loading" class="text-center py-4 text-gray-500">
-        Nenhum dado carregado.
-      </li>
-    </ul>
+      </a>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import axios from 'axios';
+import { ref } from 'vue'
+import axios from 'axios'
 
-const startDate = ref('');
-const endDate = ref('');
-const dados = ref([]);
-const loading = ref(false);
+const startDate = ref('')
+const endDate = ref('')
+const dados = ref([])
 
-function formatarData(data) {
-  return data;
-}
+const formatarData = (data) => {
+  const [ano, mes, dia] = data.split('-');
+  return `${dia}/${mes}/${ano}`;
+};
 
-function formatarValor(valor) {
-  const num = Number(String(valor).replace(',', '.'));
-  if (isNaN(num)) return valor;
-  return `${num.toFixed(2)}%`;
-}
-
-async function buscarSelic() {
-  if (!startDate.value || !endDate.value) return;
-
-  loading.value = true;
-  dados.value = [];
-
-  try {
-    const formatBR = (dateStr) => {
-      const date = new Date(dateStr);
-      return new Intl.DateTimeFormat('pt-BR').format(date);
-    };
-
-    const res = await axios.get('/api/selic', {
-      params: {
-        startDate: formatBR(startDate.value),
-        endDate: formatBR(endDate.value),
-      },
-    });
-
-    dados.value = res.data;
-  } catch (e) {
-    alert('Erro ao buscar dados Selic.');
-  } finally {
-    loading.value = false;
-  }
-}
-
-async function exportarCSV() {
+const buscarSelic = async () => {
   if (!startDate.value || !endDate.value) {
-    return alert('Informe as datas para exportar.');
+    alert('Por favor, selecione ambas as datas.');
+    return;
   }
-
   try {
-    const response = await axios.get('/exportar', {
+    const response = await axios.get('/api/selic', {
       params: {
-        startDate: startDate.value,
-        endDate: endDate.value,
+        startDate: formatarData(startDate.value),
+        end: formatarData(endDate.value),
       },
-      responseType: 'blob',
-    });
-
-    const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
-    const url = window.URL.createObjectURL(blob);
-
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', 'selic.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
+    })
+    dados.value = response.data
   } catch (error) {
-    alert('Erro ao exportar CSV.');
-    console.error(error);
+    console.error(error)
+    alert('Erro ao buscar dados da Selic.')
   }
 }
-
 
 </script>
+
+<style scoped>
+input[type="date"] {
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+}
+</style>
