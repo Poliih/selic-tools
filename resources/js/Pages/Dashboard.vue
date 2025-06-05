@@ -1,10 +1,15 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import axios from 'axios'
+import { Chart, controllers, registerables } from 'chart.js'
+
+Chart.register(...registerables)
 
 const startDate = ref('')
 const endDate = ref('')
 const dados = ref([])
+const chartRef = ref(null)
+let chartInstance = null
 
 const formatarData = (data) => {
     const d = typeof data === 'string' ? data : data.value
@@ -31,7 +36,9 @@ const buscarSelic = async () => {
                 endDate: formatarData(endDate.value),
             },
         })
+        console.log('Dados recebidos:', response.data)
         dados.value = response.data
+        renderChart()
     } catch (error) {
         console.error(error)
         alert('Erro ao buscar dados da Selic.')
@@ -40,7 +47,64 @@ const buscarSelic = async () => {
     }
 }
 
+const renderChart = () => {
+    if (!chartRef.value || !dados.value.length) return
 
+    const dadosAgrupados = {}
+    dados.value.forEach(item => {
+        const [dia, mes, ano] = item.data.split('/')
+        const chave = `${mes}/${ano.slice(-2)}`
+
+        if (!dadosAgrupados[chave]) {
+            dadosAgrupados[chave] = []
+        }
+        dadosAgrupados[chave].push(Number(item.valor))
+    })
+
+    const labels = Object.keys(dadosAgrupados)
+    const valores = labels.map(chave => {
+        const soma = dadosAgrupados[chave].reduce((a, b) => a + b, 0)
+        const media = soma / dadosAgrupados[chave].length
+        return Number(media.toFixed(7))
+    })
+
+    if (chartInstance) {
+        chartInstance.destroy()
+    }
+
+    chartInstance = new Chart(chartRef.value, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Taxa Selic Média (%) por Mês',
+                data: valores,
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.5,
+                fill: false,
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'top' },
+                title: { display: true, text: 'Histórico da Taxa Selic por Mês' }
+            },
+            scales: {
+                y: {
+                    ticks: {
+                        callback: (value) => value.toFixed(3) + '%'
+                    }
+                },
+                x: {
+                    ticks: {
+                        maxTicksLimit: 10
+                    }
+                }
+            }
+        }
+    })
+}
 </script>
 
 <template>
@@ -69,6 +133,10 @@ const buscarSelic = async () => {
                     </a>
                 </div>
             </div>
+        </div>
+
+        <div class="mt-8">
+            <canvas ref="chartRef"></canvas>
         </div>
 
         <div v-if="dados.length" class="overflow-x-auto mt-4 border rounded-md shadow-sm">
