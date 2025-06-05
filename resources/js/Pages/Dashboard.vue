@@ -68,6 +68,11 @@ const renderChart = () => {
         return Number(media.toFixed(7))
     })
 
+    if (labels.length < 2) {
+        alert('Selecione um intervalo de datas maior para exibir o gráfico.')
+        return
+    }
+
     if (chartInstance) {
         chartInstance.destroy()
     }
