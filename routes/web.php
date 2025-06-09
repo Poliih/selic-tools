@@ -4,14 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
-});
+Route::get('/', fn() => redirect()->route('dashboard'));
 
 Route::middleware([
     'auth:sanctum',
@@ -20,5 +13,4 @@ Route::middleware([
 ])->group(function () {
     Route::get('/dashboard', fn () => Inertia::render('Dashboard'))->name('dashboard');
     Route::get('/simulador', fn () => Inertia::render('Simulador'))->name('simulador');
-    Route::get('/exportar', fn () => Inertia::render('Exportar'))->name('exportar');
 });
