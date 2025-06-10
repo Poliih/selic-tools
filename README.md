@@ -1,61 +1,144 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+-----
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+# Selic Tools 📊
 
-## About Laravel
+Este é um projeto de aplicação web full-stack que utiliza o **Laravel** para o backend e **Vue.js** para o frontend. A aplicação consome a API de Séries Temporais (SGS) do Banco Central do Brasil para buscar, exibir, simular e exportar dados da taxa Selic.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+-----
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## ✨ Funcionalidades
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+  * **Dashboard Interativo:** Visualização do histórico da taxa Selic com um gráfico dinâmico.
+  * **Seleção de Período:** Permite ao usuário escolher períodos predefinidos (ex: 30 dias, 3 meses, 1 ano) ou selecionar datas de início e fim manualmente.
+  * **Simulador de Rendimentos:** Calcula o valor final de um investimento inicial com base na variação da Selic no período informado.
+  * **Exportação de Dados:** Permite baixar os dados do período selecionado em formato **CSV**.
+  * **Interface Reativa:** Interface de usuário moderna e responsiva construída com Vue.js e Tailwind CSS.
 
-## Learning Laravel
+-----
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 🛠️ Tecnologias Utilizadas
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+  * **Backend:**
+      * PHP 8+
+      * **Laravel 10+**: Framework principal do backend.
+      * **Guzzle (via `Http` Facade)**: Para fazer as chamadas à API do Banco Central.
+  * **Frontend:**
+      * **Vue.js 3** (com Composition API e `<script setup>`)
+      * **Vite**: Ferramenta de build do frontend.
+      * **Axios**: Para as requisições HTTP do cliente para o backend.
+      * **Chart.js**: Para a renderização do gráfico de histórico.
+      * **Tailwind CSS**: Para a estilização da interface.
+  * **API Externa:**
+      * [API de Séries Temporais (SGS)](https://dadosabertos.bcb.gov.br/dataset/11-taxa-de-juros---selic) do Banco Central do Brasil.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+-----
 
-## Laravel Sponsors
+## 🏗️ Arquitetura do Projeto
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+O projeto é dividido em duas partes principais: o backend Laravel, que serve uma API interna, e o frontend Vue.js, que consome essa API.
 
-### Premium Partners
+### Backend (Laravel)
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+O backend é responsável por toda a lógica de negócio e pela comunicação com a API do Banco Central.
 
-## Contributing
+#### **1. `SelicService.php`**
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+  * **Responsabilidade:** Camada de serviço que encapsula a lógica de comunicação com a API do Banco Central. Isso mantém o controller limpo e a lógica de acesso a dados externos isolada.
+  * **Métodos Principais:**
+      * `getSelicData($startDate, $endDate)`: Busca os dados da Selic em um intervalo de datas.
+      * `getLatestSelic()`: Busca o último registro da taxa Selic.
 
-## Code of Conduct
+#### **2. `SelicController.php`**
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+  * **Responsabilidade:** Orquestrar as requisições HTTP, chamar o `SelicService` para buscar os dados e formatar a resposta para o frontend.
+  * **Métodos (Endpoints):**
+      * `historico()`: Retorna uma lista de registros da Selic para um determinado período. Usado pelo Dashboard.
+      * `simular()`: Recebe um valor inicial e um período, calcula o rendimento com base nas taxas diárias da Selic e retorna o valor final.
+      * `exportar()`: Busca os dados de um período e os formata em uma string CSV, retornando um arquivo para download.
 
-## Security Vulnerabilities
+### Frontend (Vue.js)
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+O frontend é composto por componentes Vue que gerenciam o estado da interface e a interação do usuário.
 
-## License
+#### **1. Componente de Dashboard**
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+  * **Responsabilidade:** Exibir o histórico e o gráfico da Selic.
+  * **Lógica:**
+      * Utiliza `ref` para gerenciar o estado das datas (`startDate`, `endDate`), dos dados (`dados`) e do estado de carregamento (`isLoading`).
+      * Usa um `watch` com *debounce* para chamar a API automaticamente sempre que as datas mudam, evitando chamadas excessivas.
+      * O método `buscarSelic` usa **Axios** para fazer uma requisição ao endpoint `/api/selic` do backend.
+      * Após receber os dados, agrupa-os por mês e renderiza o gráfico com a biblioteca **Chart.js**.
+
+#### **2. Componente de Simulador**
+
+  * **Responsabilidade:** Fornecer a interface para a simulação de rendimentos.
+  * **Lógica:**
+      * Gerencia o estado dos inputs: valor inicial, data de início e data de fim.
+      * Ao submeter o formulário, o método `simular` chama o endpoint `/api/simulacao` do backend via **Axios**.
+      * Exibe o resultado (`valorfinal`) retornado pelo backend ou uma mensagem de erro.
+
+-----
+
+## ⚙️ Como Executar o Projeto
+
+1.  **Clone o repositório:**
+
+    ```bash
+    git clone https://github.com/Poliih/selic-tools.git
+    cd selic-tools
+    ```
+
+2.  **Instale as dependências do Backend:**
+
+    ```bash
+    composer install
+    ```
+
+3.  **Configure o ambiente:**
+
+    ```bash
+    cp .env.example .env
+    php artisan key:generate
+    ```
+
+4.  **Instale as dependências do Frontend:**
+
+    ```bash
+    npm install
+    ```
+
+5.  **Compile os assets do Frontend:**
+
+    ```bash
+    # Para desenvolvimento (com hot-reload)
+    npm run dev
+
+    # Para produção
+    npm run build
+    ```
+
+6.  **Inicie o servidor de desenvolvimento:**
+
+    ```bash
+    php artisan serve
+    ```
+
+    A aplicação estará disponível em `http://127.0.0.1:8000`.
+
+-----
+
+## 🔌 Endpoints da API Interna
+
+O backend Laravel expõe os seguintes endpoints para o frontend:
+
+  * `GET /api/selic?startDate={dd/mm/yyyy}&endDate={dd/mm/yyyy}`
+
+      * Retorna o histórico da Selic no período.
+
+  * `GET /api/simulacao?valor={float}&startDate={dd/mm/yyyy}&endDate={dd/mm/yyyy}`
+
+      * Retorna o resultado da simulação de rendimento.
+
+  * `GET /api/exportar?startDate={dd/mm/yyyy}&endDate={dd/mm/yyyy}`
+
+      * Inicia o download de um arquivo `selic.csv` com os dados do período.
