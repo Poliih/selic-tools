@@ -30,7 +30,7 @@ async function simular() {
             params: {
                 valor: valor.value,
                 startDate: formatBR(inicio.value),
-                endtDate: formatBR(fim.value),
+                endDate: formatBR(fim.value),
             },
         });
         resultado.value = res.data.valorfinal;
